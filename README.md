@@ -1,4 +1,4 @@
-# Go 版 Koa —— SOA
+# Go 版 Koa —— Soa
 
 ## Usage
 
