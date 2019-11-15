@@ -1,66 +1,81 @@
 package soa
 
 import (
+	"fmt"
 	"lib/soa/sutils"
 	"net/http"
+	"strconv"
 )
 
-type Middleware func(http.HandlerFunc) http.HandlerFunc
-
 type Server struct {
-	middlewares []Middleware
 }
 
-var record = make(map[string][]string)
-
-func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
-	for _, m := range middlewares {
-		f = m(f)
-	}
-	return f
+type Request struct {
+	URL    string
+	Method string
 }
+type Ctx struct {
+	w       http.ResponseWriter
+	r       *http.Request
+	Request Request
+}
+
+func (ctx *Ctx) init() {
+	ctx.Request.URL = ctx.r.URL.Path
+	ctx.Request.Method = ctx.r.Method
+}
+
+func (ctx *Ctx) End(status int, message string) {
+	ctx.w.WriteHeader(status)
+	fmt.Fprintf(ctx.w, message)
+}
+
+type Handle func(ctx *Ctx)
+
+type Middleware func(Handle) Handle
+
+var routes = make(map[string][]string)
 
 func routeController() Middleware {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			if !sutils.HasKey(record, r.URL.Path) {
-				http.NotFound(w, r)
+	return func(next Handle) Handle {
+		return func(ctx *Ctx) {
+			if !sutils.Includes(routes[ctx.Request.URL], ctx.Request.Method) {
+				http.NotFound(ctx.w, ctx.r)
 				return
 			}
-			if !sutils.Includes(record[r.URL.Path], r.Method) {
-				http.NotFound(w, r)
-				return
-			}
-			next(w, r)
+			next(ctx)
 		}
 	}
 }
 
-func (s *Server) Use(middleware Middleware) {
-	s.middlewares = append(s.middlewares, middleware)
+func (s *Server) Listen(port int) {
+	p := strconv.Itoa(port)
+	fmt.Println("server is listening in http://localhost:" + p)
+	http.ListenAndServe(":"+p, nil)
 }
 
-func (s *Server) GET(uri string, handle func(http.ResponseWriter, *http.Request), middlewares ...Middleware) {
-	s.setRequest("GET", uri, handle, middlewares...)
+func (s *Server) GET(uri string, handle Handle, middlewares ...Middleware) {
+	s.SetRequest("GET", uri, handle, middlewares...)
 }
 
-func (s *Server) POST(uri string, handle func(http.ResponseWriter, *http.Request), middlewares ...Middleware) {
-	s.setRequest("GET", uri, handle, middlewares...)
+func (s *Server) SetRequest(method string, uri string, handle Handle, middlewares ...Middleware) {
+	routes[uri] = append(routes[uri], method)
+	handle = Chain(handle, routeController())
+	handle = Chain(handle, middlewares...)
+	http.HandleFunc(uri, http.HandlerFunc(ctxInject(handle)))
 }
 
-func (s *Server) PUT(uri string, handle func(http.ResponseWriter, *http.Request), middlewares ...Middleware) {
-	s.setRequest("GET", uri, handle, middlewares...)
-}
-
-func (s *Server) DELETE(uri string, handle func(http.ResponseWriter, *http.Request), middlewares ...Middleware) {
-	s.setRequest("GET", uri, handle, middlewares...)
-}
-
-func (s *Server) setRequest(method string, uri string, handle func(http.ResponseWriter, *http.Request), middlewares ...Middleware) {
-	record[uri] = append(record[uri], method)
-	handle = Chain(http.HandlerFunc(handle), routeController())
-	for _, m := range s.middlewares {
-		handle = Chain(handle, m)
+func ctxInject(handle Handle) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := Ctx{w: w, r: r}
+		ctx.init()
+		handle(&ctx)
 	}
-	http.Handle(uri, Chain(handle, middlewares...))
+}
+
+func Chain(h Handle, middlewares ...Middleware) Handle {
+	for _, m := range middlewares {
+		h = m(h)
+	}
+	return h
 }

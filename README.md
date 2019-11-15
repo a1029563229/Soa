@@ -2,28 +2,38 @@
 
 ## Usage
 
-- basic
+### Basic
+
 ```go
+package main
+
+import (
+	"fmt"
+	"lib/soa/soa"
+)
+
 func main() {
-  app := new(soa.Server)
-  app.GET("/", hello.Hello)
+	app := new(soa.Server)
+	app.GET("/home", func(ctx *soa.Ctx) {
+		ctx.End(200, "hello world")
+	})
+	app.Listen(8088)
 }
 ```
 
-- middleware
+### Middleware
 ```go
 func mid() soa.Middleware {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println("mid")
-			next(w, r)
+	return func(next soa.Handle) soa.Handle {
+		return func(ctx *soa.Ctx) {
+			fmt.Println(ctx.Request.Method)
+			next(ctx)
 		}
 	}
 }
 
-func main() {
-  app := new(soa.Server)
-  app.GET("/", hello.Hello, mid())
-}
+app.GET("/home", func(ctx *soa.Ctx) {
+	ctx.End(200, "hello world")
+}, mid())
 ```
 
