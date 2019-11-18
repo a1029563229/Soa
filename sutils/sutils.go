@@ -1,6 +1,6 @@
 package sutils
 
-func HasKey(m map[string][]string, key string) bool {
+func HasKey(m map[string]interface{}, key string) bool {
 	if _, ok := m[key]; !ok {
 		return false
 	}
