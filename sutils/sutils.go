@@ -44,6 +44,7 @@ func Goid() int {
 	return id
 }
 
+// convert struct to bson
 func ToBson(structure interface{}) bson.M {
 	result := make(bson.M)
 	t := reflect.TypeOf(structure)

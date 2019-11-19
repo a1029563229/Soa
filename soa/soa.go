@@ -2,14 +2,11 @@ package soa
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Server struct {
@@ -44,23 +41,6 @@ func (ctx *Ctx) JSON(jsonData interface{}) string {
 	}
 
 	return string(jsonBytes)
-}
-
-func (ctx *Ctx) BSON(bsonData interface{}) (bson.M, error) {
-	bytes, err := bson.Marshal(&bsonData) //转换成 JSON，返回的是 byte[]
-	if err != nil {
-		log.Println("Parse BSON Step1 Has Error", err)
-		return nil, errors.New("Parse BSON Has Error")
-	}
-
-	bsonM := bson.M{}
-	err2 := bson.Unmarshal(bytes, &bsonM)
-	if err2 != nil {
-		log.Println("Parse BSON Step2 Has Error", err2)
-		return nil, errors.New("Parse BSON Has Error")
-	}
-
-	return bsonM, nil
 }
 
 func (ctx *Ctx) Query(key string) string {

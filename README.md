@@ -37,3 +37,25 @@ app.GET("/home", func(ctx *soa.Ctx) {
 }, mid())
 ```
 
+### Convert Struct To BSON
+
+```go
+type Category struct {
+	ID          primitive.ObjectID `bson:"_id"`
+	Level       int64              `bson:"level"`
+	Title       string             `bson:"title"`
+	Description string             `bson:"description"`
+	Post        string             `bson:"post"`
+	ParentId    primitive.ObjectID `bson:"parentId"`
+	CreatedTime time.Time          `bson:"createdTime"`
+	UpdatedTime time.Time          `bson:"updatedTime"`
+}
+
+category := Category{
+	ID:          primitive.NewObjectID(),
+	Level:			 1,
+	CreatedTime: time.Now(),
+}
+bsonM := sutils.ToBson(category)
+// (*mongo.Collection).InsertOne(context, bsonM)
+```
