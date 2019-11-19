@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -55,7 +56,11 @@ func ToBson(structure interface{}) bson.M {
 		}
 
 		tag := t.Field(i).Tag
+		name := t.Field(i).Name
 		key := tag.Get("bson")
+
+		fmt.Println("kind:", field.Kind())
+
 		switch field.Kind() {
 		case reflect.Int, reflect.Int64:
 			v := field.Int()
@@ -65,8 +70,39 @@ func ToBson(structure interface{}) bson.M {
 			v := field.String()
 			result[key] = v
 			break
+		case reflect.Struct:
+			v := getField(structure, name)
+			result[key] = v
+			break
 		}
 	}
 
 	return result
+}
+
+// get struct field value
+func getField(v interface{}, field string) string {
+	r := reflect.ValueOf(v)
+	f := reflect.Indirect(r).FieldByName(field)
+	fieldValue := f.Interface()
+
+	switch v := fieldValue.(type) {
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case string:
+		return v
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case time.Time:
+		return v.String()
+	default:
+		return ""
+	}
 }
