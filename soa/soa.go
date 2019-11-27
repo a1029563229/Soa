@@ -75,6 +75,18 @@ func (ctx *Ctx) GetBody(receiver interface{}) interface{} {
 	return receiver
 }
 
+type Header map[string]string
+
+func (ctx *Ctx) SetHeader(key string, value string) {
+	ctx.w.Header().Set(key, value)
+}
+
+func (ctx *Ctx) SetHeaders(headers Header) {
+	for key, value := range headers {
+		ctx.SetHeader(key, value)
+	}
+}
+
 type Handle func(ctx *Ctx)
 
 type Middleware func(Handle) Handle

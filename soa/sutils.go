@@ -1,4 +1,4 @@
-package sutils
+package soa
 
 import (
 	"fmt"
@@ -52,6 +52,7 @@ func ToBson(structure interface{}) bson.M {
 
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
+
 		if field.IsZero() {
 			continue
 		}
@@ -59,8 +60,8 @@ func ToBson(structure interface{}) bson.M {
 		tag := t.Field(i).Tag
 		name := t.Field(i).Name
 		key := tag.Get("bson")
-
-		fmt.Println("kind:", field.Kind())
+		fmt.Println(name)
+		fmt.Println(field.Kind())
 
 		switch field.Kind() {
 		case reflect.Int, reflect.Int64:
@@ -104,6 +105,7 @@ func getField(v interface{}, field string) string {
 	case time.Time:
 		return v.String()
 	default:
+		fmt.Println("value", v)
 		return ""
 	}
 }
