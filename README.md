@@ -1,4 +1,4 @@
-# Go 版 Koa —— Soa
+# Soa（A simple library for HTTP server）
 
 ## Usage
 
