@@ -44,6 +44,19 @@ func Goid() int {
 	return id
 }
 
+// convert struct to bson list
+func ToBsonList(structs interface{}) []bson.M {
+	var record []bson.M
+	v := reflect.ValueOf(structs)
+
+	for i := 0; i < v.Len(); i++ {
+		s := v.Index(i)
+		bson := ToBson(s.Interface())
+		record = append(record, bson)
+	}
+	return record
+}
+
 // convert struct to bson
 func ToBson(structure interface{}) bson.M {
 	result := make(bson.M)
@@ -60,8 +73,6 @@ func ToBson(structure interface{}) bson.M {
 		tag := t.Field(i).Tag
 		name := t.Field(i).Name
 		key := tag.Get("bson")
-		fmt.Println(name)
-		fmt.Println(field.Kind())
 
 		switch field.Kind() {
 		case reflect.Int, reflect.Int64:
@@ -71,6 +82,15 @@ func ToBson(structure interface{}) bson.M {
 		case reflect.String:
 			v := field.String()
 			result[key] = v
+			break
+		case reflect.Slice:
+			v := field.Interface()
+			result[key] = v
+			break
+		// ObjectID
+		case reflect.Array:
+			f := reflect.Indirect(v).FieldByName(name)
+			result[key] = f.Interface()
 			break
 		case reflect.Struct:
 			v := getField(structure, name)
@@ -83,11 +103,20 @@ func ToBson(structure interface{}) bson.M {
 }
 
 // get struct field value
-func getField(v interface{}, field string) string {
+func getField(v interface{}, field string) interface{} {
 	r := reflect.ValueOf(v)
 	f := reflect.Indirect(r).FieldByName(field)
 	fieldValue := f.Interface()
 
+	switch fieldValue.(type) {
+	case time.Time:
+		return f.Interface()
+	default:
+		return getFieldString(fieldValue)
+	}
+}
+
+func getFieldString(fieldValue interface{}) string {
 	switch v := fieldValue.(type) {
 	case int64:
 		return strconv.FormatInt(v, 10)
@@ -102,8 +131,6 @@ func getField(v interface{}, field string) string {
 			return "true"
 		}
 		return "false"
-	case time.Time:
-		return v.String()
 	default:
 		fmt.Println("value", v)
 		return ""

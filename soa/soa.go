@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Server struct {
@@ -27,10 +29,18 @@ func (ctx *Ctx) init() {
 	ctx.Request.Method = ctx.r.Method
 }
 
+func (ctx *Ctx) Send(data interface{}) {
+	ctx.End(200, ctx.JSON(data))
+}
+
 func (ctx *Ctx) End(status int, message string) {
 	ctx.w.Header().Set("content-type", "application/json")
 	ctx.w.WriteHeader(status)
 	fmt.Fprintf(ctx.w, message)
+}
+
+func (ctx *Ctx) BSON(bsonData interface{}) bson.M {
+	return ToBson(bsonData)
 }
 
 func (ctx *Ctx) JSON(jsonData interface{}) string {
@@ -87,11 +97,23 @@ func (ctx *Ctx) SetHeaders(headers Header) {
 	}
 }
 
+func (ctx *Ctx) SetPageInfo(page int64, pageSize int64, total int64) {
+	ctx.SetHeaders(Header{
+		"X-Pagination-Page":     strconv.FormatInt(page, 10),
+		"X-Pagination-Pagesize": strconv.FormatInt(pageSize, 10),
+		"X-Pagination-Total":    strconv.FormatInt(total, 10),
+	})
+}
+
 type Handle func(ctx *Ctx)
 
 type Middleware func(Handle) Handle
 
 var routes = make(map[string]Handle)
+
+func NewServer() *Server {
+	return new(Server)
+}
 
 func (s *Server) GET(uri string, handle Handle, middlewares ...Middleware) {
 	s.SetRequest("GET", uri, handle, middlewares...)
