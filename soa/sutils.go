@@ -3,9 +3,7 @@ package soa
 import (
 	"fmt"
 	"reflect"
-	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,23 +23,6 @@ func Includes(A []string, val string) bool {
 		}
 	}
 	return false
-}
-
-func Goid() int {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println("panic recover:panic info:%v", err)
-		}
-	}()
-
-	var buf [64]byte
-	n := runtime.Stack(buf[:], false)
-	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]
-	id, err := strconv.Atoi(idField)
-	if err != nil {
-		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
-	}
-	return id
 }
 
 // convert struct to bson list
