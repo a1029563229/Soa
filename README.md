@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	app := new(soa.Server)
+	app := soa.NewServer()
 	app.GET("/home", func(ctx *soa.Ctx) {
 		ctx.End(200, "hello world")
 	})
