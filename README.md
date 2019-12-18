@@ -74,31 +74,6 @@ app.GET("/home", func(ctx *soa.Ctx) {
 }, mid())
 ```
 
-### Convert Struct To BSON/JSON
-
-```go
-type Category struct {
-	ID          primitive.ObjectID `bson:"_id" json:"_id"`
-	Level       int64              `bson:"level" json:"level"`
-	Title       string             `bson:"title" json:"title"`
-	Description string             `bson:"description,omitempty" json:"description,omitempty"`
-	Poster      string             `bson:"poster,omitempty" json:"poster,omitempty"`
-	ParentId    string             `bson:"parentId,omitempty" json:"parentId,omitempty"`
-	CreatedTime int64              `bson:"createdTime" json:"createdTime"`
-}
-
-func GetSomething(ctx *soa.Ctx) {
-	category := Category{
-		ID:          primitive.NewObjectID(),
-		Level:			 1,
-		CreatedTime: time.Now(),
-	}
-	bsonM := ctx.BSON(category)
-	// You can send formated json data to client
-	ctx.Send(bsonM)
-}
-```
-
 ### Set Response Header
 ```go
 func GetSomething(ctx *soa.Ctx) {

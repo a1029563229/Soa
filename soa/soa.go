@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Server struct {
@@ -37,10 +35,6 @@ func (ctx *Ctx) End(status int, message string) {
 	ctx.w.Header().Set("content-type", "application/json")
 	ctx.w.WriteHeader(status)
 	fmt.Fprintf(ctx.w, message)
-}
-
-func (ctx *Ctx) BSON(bsonData interface{}) bson.M {
-	return ToBson(bsonData)
 }
 
 func (ctx *Ctx) JSON(jsonData interface{}) string {
@@ -152,14 +146,6 @@ func (s *Server) Listen(port int) {
 }
 
 func buildRouter(w http.ResponseWriter, r *http.Request) {
-	// if r.Method == "OPTIONS" {
-	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	// 	w.Header().Set("Access-Control-Allow-Methods", "*")
-	// 	w.Header().Set("Access-Control-Allow-Headers", "*")
-	// 	fmt.Fprintf(w, "")
-	// 	return
-	// }
-
 	routeId := r.Method + r.URL.Path
 	handle, ok := routes[routeId]
 	if !ok {
