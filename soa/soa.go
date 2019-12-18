@@ -16,6 +16,7 @@ type Request struct {
 	URL    string
 	Method string
 }
+
 type Ctx struct {
 	w       http.ResponseWriter
 	r       *http.Request
@@ -34,7 +35,15 @@ func (ctx *Ctx) Send(data interface{}) {
 func (ctx *Ctx) End(status int, message string) {
 	ctx.w.Header().Set("content-type", "application/json")
 	ctx.w.WriteHeader(status)
+	logger.Info(message)
 	fmt.Fprintf(ctx.w, message)
+}
+
+func (ctx *Ctx) Error(status int, err error) {
+	ctx.w.Header().Set("content-type", "application/json")
+	ctx.w.WriteHeader(status)
+	logger.Error(err.Error())
+	fmt.Fprintf(ctx.w, err.Error())
 }
 
 func (ctx *Ctx) JSON(jsonData interface{}) string {
