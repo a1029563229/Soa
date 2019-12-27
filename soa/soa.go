@@ -148,13 +148,13 @@ func chain(h Handle, middlewares ...Middleware) Handle {
 }
 
 func (s *Server) Listen(port int) {
-	http.HandleFunc("/", buildRouter)
+	http.HandleFunc("/", s.ServeHTTP)
 	p := strconv.Itoa(port)
 	fmt.Println("server is listening in http://localhost:" + p)
 	http.ListenAndServe(":"+p, nil)
 }
 
-func buildRouter(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	routeId := r.Method + r.URL.Path
 	handle, ok := routes[routeId]
 	if !ok {
