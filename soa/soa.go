@@ -36,7 +36,7 @@ func (ctx *Ctx) End(status int, message string) {
 	ctx.w.Header().Set("content-type", "application/json")
 	ctx.w.WriteHeader(status)
 	logger.Info(message)
-	fmt.Fprintf(ctx.w, message)
+	fmt.Fprint(ctx.w, message)
 }
 
 func (ctx *Ctx) Error(status int, err error) {
